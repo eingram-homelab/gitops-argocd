@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rancher-rancher
+  namespace: argocd
+spec:
+  project: default
+  sources:
+  - repoURL: https://github.com/eingram-homelab/gitops-argocd.git
+    targetRevision: main
+    path: argocd/apps/rancher
+    helm:
+      releaseName: rancher
+      parameters:
+      - name: privateCA
+        value: "true"
+      - name: hostname
+        value: rancher.local.lan
+      valueFiles:
+      - $values/environments/dev/rancher/values/rancher.yaml
+  - repoURL: https://github.com/eingram-homelab/gitops-argocd.git
+    targetRevision: main
+    ref: values
+  - repoURL: https://github.com/eingram-homelab/gitops-argocd.git
+    targetRevision: main
+    path: environments/dev/rancher/manifests/rancher
+  destination:
+    namespace: cattle-system
+    server: https://k3s-rancher-cp1.local.lan:6443
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

@@ -1,0 +1,84 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: dual-role
+  labels:
+    strimzi.io/cluster: kafka-dev-cluster
+spec:
+  replicas: 1
+  roles:
+  - controller
+  - broker
+  resources:
+    requests:
+      memory: 250Mi
+      cpu: 250m
+    limits:
+      memory: 500Mi
+      cpu: 250m
+  storage:
+    type: jbod
+    volumes:
+    - id: 0
+      type: persistent-claim
+      size: 10Gi
+      deleteClaim: false
+      kraftMetadata: shared
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: kafka-dev-cluster
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    version: 4.0.0
+    metadataVersion: 4.0-IV3
+    listeners:
+    - name: plain
+      port: 9092
+      type: internal
+      tls: false
+    - name: tls
+      port: 9093
+      type: internal
+      tls: true
+    - name: external1
+      port: 9094
+      type: ingress
+      tls: true
+      # authentication:
+      #   type: tls
+      configuration:
+        class: nginx
+        brokerCertChainAndKey:
+          secretName: kafka-tls
+          key: tls.key
+          certificate: tls.crt
+        bootstrap:
+          host: bootstrap-dev.local.lan
+          # annotations:
+          #   cert-manager.io/cluster-issuer: "vault-issuer"
+        brokers:
+        - broker: 0
+          host: broker-dev-0.local.lan
+          # annotations:
+          #   cert-manager.io/cluster-issuer: "vault-issuer"
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+  entityOperator:
+    topicOperator:
+      resources:
+        requests:
+          memory: 250Mi
+          cpu: 250m
+        limits:
+          memory: 500Mi
+          cpu: 250m
+    userOperator: {}

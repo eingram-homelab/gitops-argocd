@@ -1,0 +1,25 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: es-vault-server-tls
+  namespace: vault
+spec:
+  refreshInterval: "15s"
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: vault-server-tls
+  data:
+  - secretKey: tls.key
+    remoteRef:
+      key: vault/k3s-mgmt
+      property: vault_key
+  - secretKey: tls.crt
+    remoteRef:
+      key: vault/k3s-mgmt
+      property: vault_crt
+  - secretKey: ca.crt
+    remoteRef:
+      key: vault/k3s-mgmt
+      property: vault_ca

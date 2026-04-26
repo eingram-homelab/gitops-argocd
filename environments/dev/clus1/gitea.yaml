@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea-clus1-dev
+  namespace: argocd
+spec:
+  project: default
+  sources:
+  - repoURL: https://github.com/eingram-homelab/gitops-argocd.git
+    targetRevision: main
+    path: argocd/apps/gitea/
+    helm:
+      releaseName: gitea
+      valueFiles:
+      - $values/environments/dev/clus1/values/gitea-values.yaml
+  - repoURL: https://github.com/eingram-homelab/gitops-argocd.git
+    targetRevision: main
+    ref: values
+  - repoURL: https://github.com/eingram-homelab/gitops-argocd.git
+    targetRevision: main
+    path: environments/dev/clus1/manifests/gitea
+  destination:
+    server: https://rancher.local.lan/k8s/clusters/c-m-w4fjmt4t
+    namespace: gitea
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+    - CreateNamespace=true

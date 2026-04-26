@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: influxdb2
+  namespace: argocd
+spec:
+  destination:
+    namespace: influxdb2
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: https://helm.influxdata.com/
+      targetRevision: 2.1.2
+      chart: influxdb2
+      helm:
+        valueFiles:
+          - $values/argocd/apps/influxdb2/values-prod.yaml
+    - repoURL: https://github.com/eingram-homelab/gitops-argocd.git
+      targetRevision: main
+      ref: values
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
